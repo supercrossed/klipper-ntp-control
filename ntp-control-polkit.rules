@@ -1,0 +1,14 @@
+// Polkit rule: allow the klipper user to control NTP via timedatectl
+// without a password prompt.
+//
+// Alternative to the sudoers approach. Use ONE of the two, not both.
+// Install: sudo cp ntp-control-polkit.rules /etc/polkit-1/rules.d/50-ntp-control.rules
+//
+// With this rule, set use_sudo: False in your [ntp_control] config section.
+
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.freedesktop.timedate1.set-ntp" &&
+        subject.user == "klipper") {
+        return polkit.Result.YES;
+    }
+});

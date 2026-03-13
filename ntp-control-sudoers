@@ -1,0 +1,8 @@
+# Allow the klipper user to run timedatectl without a password.
+# Install: sudo cp ntp-control-sudoers /etc/sudoers.d/ntp-control
+# Verify: sudo visudo -cf /etc/sudoers.d/ntp-control
+
+# Only the specific subcommands needed are whitelisted.
+klipper ALL=(ALL) NOPASSWD: /usr/bin/timedatectl set-ntp true
+klipper ALL=(ALL) NOPASSWD: /usr/bin/timedatectl set-ntp false
+klipper ALL=(ALL) NOPASSWD: /usr/bin/timedatectl show --property=NTP --value
