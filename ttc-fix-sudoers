@@ -1,0 +1,14 @@
+# Allow the klipper user to run TTC fix commands without a password.
+# Install: sudo cp ttc-fix-sudoers /etc/sudoers.d/ttc-fix
+# Verify: sudo visudo -cf /etc/sudoers.d/ttc-fix
+#
+# Only the specific subcommands needed are whitelisted.
+
+# NTP control via timedatectl
+klipper ALL=(ALL) NOPASSWD: /usr/bin/timedatectl set-ntp true
+klipper ALL=(ALL) NOPASSWD: /usr/bin/timedatectl set-ntp false
+klipper ALL=(ALL) NOPASSWD: /usr/bin/timedatectl show --property=NTP --value
+
+# Wi-Fi power save control via iw
+klipper ALL=(ALL) NOPASSWD: /usr/sbin/iw dev wlan0 set power_save on
+klipper ALL=(ALL) NOPASSWD: /usr/sbin/iw dev wlan0 set power_save off
