@@ -81,7 +81,7 @@ In `ntp_control.cfg`:
 
 ```ini
 [ntp_control]
-# Auto-disable NTP on print start, re-enable on end (default: True)
+# Auto-disable NTP on Klipper startup, re-enable on shutdown (default: True)
 auto_manage: True
 
 # Use sudo for timedatectl commands (default: True)
@@ -105,23 +105,23 @@ The macros in `ntp_macros.cfg` appear as buttons in the Mainsail macro panel:
 - **NTP_CHECK** — query current status
 - **NTP_TOGGLE** — flip the current state
 
-> **Note:** Mainsail does not support custom toggle widgets without a fork. These macro buttons are the standard way to expose controls. With `auto_manage: True` (the default), most users won't need to touch the buttons at all — NTP is handled automatically around prints.
+> **Note:** Mainsail does not support custom toggle widgets without a fork. These macro buttons are the standard way to expose controls. With `auto_manage: True` (the default), most users won't need to touch the buttons at all — NTP is disabled for the entire Klipper session.
 
 ## How It Works
 
-1. On Klipper startup, the extension queries `timedatectl` for current NTP state
-2. When a print starts (`print_stats:printing` event), it runs `timedatectl set-ntp false`
-3. When a print ends/cancels/errors, it runs `timedatectl set-ntp true`
-4. Status is exposed via `get_status()` for Moonraker/Mainsail/Fluidd to query
+1. **Klipper starts** (`klippy:ready`) — immediately disables NTP before any print or motion commands
+2. **Klipper shuts down** (`klippy:disconnect`) — re-enables NTP so the system clock stays accurate when idle
+3. Status is exposed via `get_status()` for Moonraker/Mainsail/Fluidd to query
+
+This is safer than the print-event approach because NTP is guaranteed to be off before any gcode runs — no timing window.
 
 ## Verifying It Works
 
 Check `klippy.log` for messages like:
 ```
-ntp_control: NTP is currently active. It will be disabled automatically when a print starts.
-ntp_control: Disabling NTP for print safety
+ntp_control: Disabling NTP for MCU timing safety
 ntp_control: NTP set to false
-ntp_control: Re-enabling NTP after print
+ntp_control: Re-enabling NTP on Klipper shutdown
 ntp_control: NTP set to true
 ```
 

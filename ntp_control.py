@@ -51,22 +51,15 @@ class NTPControl:
             desc=self.cmd_NTP_STATUS_help,
         )
 
-        # Register print event handlers for auto-management
+        # When auto_manage is enabled, disable NTP as soon as Klipper is ready
+        # (before any print or motion commands) and re-enable on shutdown.
+        # This eliminates the timing window that existed with print_stats events.
         if self.auto_manage:
             self.printer.register_event_handler(
                 "klippy:ready", self._handle_ready
             )
             self.printer.register_event_handler(
-                "print_stats:printing", self._handle_print_start
-            )
-            self.printer.register_event_handler(
-                "print_stats:complete", self._handle_print_end
-            )
-            self.printer.register_event_handler(
-                "print_stats:cancelled", self._handle_print_end
-            )
-            self.printer.register_event_handler(
-                "print_stats:error", self._handle_print_end
+                "klippy:disconnect", self._handle_disconnect
             )
 
     # -- Gcode command help strings --
@@ -112,23 +105,14 @@ class NTPControl:
 
     def _handle_ready(self) -> None:
         self._refresh_ntp_status()
-        if self._ntp_active:
-            logger.info(
-                "ntp_control: NTP is currently active. "
-                "It will be disabled automatically when a print starts."
-            )
-
-    def _handle_print_start(self, *args: Any) -> None:
-        if not self.auto_manage:
-            return
         if self._ntp_active is not False:
-            logger.info("ntp_control: Disabling NTP for print safety")
+            logger.info("ntp_control: Disabling NTP for MCU timing safety")
             self._set_ntp(False)
+        else:
+            logger.info("ntp_control: NTP already disabled")
 
-    def _handle_print_end(self, *args: Any) -> None:
-        if not self.auto_manage:
-            return
-        logger.info("ntp_control: Re-enabling NTP after print")
+    def _handle_disconnect(self) -> None:
+        logger.info("ntp_control: Re-enabling NTP on Klipper shutdown")
         self._set_ntp(True)
 
     # -- Internal helpers --
